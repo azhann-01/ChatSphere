@@ -2,12 +2,34 @@ package gui;
 
 import config.AppConfig;
 import database.DBConnection;
-import java.awt.*;
-import java.awt.event.*;
-import java.io.*;
+import java.awt.BorderLayout;
+import java.awt.Button;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.EventQueue;
+import java.awt.Font;
+import java.awt.Frame;
+import java.awt.Label;
+import java.awt.Panel;
+import java.awt.TextArea;
+import java.awt.TextField;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.Socket;
-import java.sql.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ChatFrame {
@@ -68,17 +90,8 @@ public class ChatFrame {
             loadUsers();
         });
 
-        Button exitButton = new Button("Exit");
-        exitButton.setFont(boldFont);
-        exitButton.addActionListener(event -> closeApplication());
-
-        Panel actionPanel = new Panel(new BorderLayout(8, 0));
-        actionPanel.setBackground(BACKGROUND_COLOR);
-        actionPanel.add(refreshButton, BorderLayout.WEST);
-        actionPanel.add(exitButton, BorderLayout.EAST);
-
         topPanel.add(welcomeLabel, BorderLayout.WEST);
-        topPanel.add(actionPanel, BorderLayout.EAST);
+        topPanel.add(refreshButton, BorderLayout.EAST);
         frame.add(topPanel, BorderLayout.NORTH);
 
         textArea = new TextArea();
@@ -139,11 +152,6 @@ public class ChatFrame {
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent event) {
-                closeApplication();
-            }
-
-            @Override
-            public void windowClosed(WindowEvent event) {
                 closeApplication();
             }
         });
@@ -385,6 +393,13 @@ public class ChatFrame {
         socket = null;
 
         try {
+            if (currentSocket != null && !currentSocket.isClosed()) {
+                currentSocket.close();
+            }
+        } catch (IOException ignored) {
+        }
+
+        try {
             if (currentIn != null) {
                 currentIn.close();
             }
@@ -395,14 +410,7 @@ public class ChatFrame {
             currentOut.close();
         }
 
-        try {
-            if (currentSocket != null && !currentSocket.isClosed()) {
-                currentSocket.close();
-            }
-        } catch (IOException ignored) {
-        }
-
-        if (!closing) {
+        if (!closing && statusMessage != null) {
             setStatus(statusMessage, ERROR_COLOR);
             updateSendState();
         }
@@ -421,9 +429,10 @@ public class ChatFrame {
         }
 
         closing = true;
+        disconnectFromServer(null);
         frame.setVisible(false);
         frame.dispose();
-        Runtime.getRuntime().halt(0);
+        System.exit(0);
     }
 
     private void centerFrame(Frame currentFrame) {
