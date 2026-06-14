@@ -2,7 +2,11 @@ package gui;
 
 import config.AppConfig;
 import database.DBConnection;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.EventQueue;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -21,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.swing.*;
-
 public class ChatFrame {
 
     private static final Color BACKGROUND_COLOR = new Color(243, 246, 249);
