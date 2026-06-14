@@ -1,87 +1,53 @@
 package gui;
 
 import database.DBConnection;
-import java.awt.Button;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.EventQueue;
-import java.awt.Font;
-import java.awt.Frame;
-import java.awt.Label;
-import java.awt.TextField;
-import java.awt.Toolkit;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.*;
 import java.sql.SQLException;
+import javax.swing.*;
 
 public class LoginFrame {
 
-    public LoginFrame() {
-        Frame frame = new Frame("ChatApp Login");
-        frame.setLayout(null);
-        frame.setSize(340, 290);
-        frame.setResizable(false);
-        centerFrame(frame);
+    private JFrame frame;
+    private JTextField usernameField;
+    private JPasswordField passwordField;
+    private JLabel messageLabel;
 
-        Label titleLabel = new Label("Private Chat Login", Label.CENTER);
+    public LoginFrame() {
+
+        frame = new JFrame("ChatApp Login");
+        frame.setSize(340, 290);
+        frame.setLayout(null);
+        frame.setResizable(false);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLocationRelativeTo(null);
+
+        JLabel titleLabel = new JLabel("Private Chat Login", SwingConstants.CENTER);
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
         titleLabel.setBounds(20, 35, 300, 30);
 
-        Label userLabel = new Label("Username:");
+        JLabel userLabel = new JLabel("Username:");
         userLabel.setBounds(30, 85, 120, 24);
 
-        TextField usernameField = new TextField();
-        usernameField.setBounds(30, 110, 280, 28);
+        usernameField = new JTextField();
+        usernameField.setBounds(30, 110, 280, 30);
 
-        Label passwordLabel = new Label("Password:");
+        JLabel passwordLabel = new JLabel("Password:");
         passwordLabel.setBounds(30, 145, 120, 24);
 
-        TextField passwordField = new TextField();
-        passwordField.setEchoChar('*');
-        passwordField.setBounds(30, 170, 280, 28);
+        passwordField = new JPasswordField();
+        passwordField.setBounds(30, 170, 280, 30);
 
-        Button loginButton = new Button("Login");
+        JButton loginButton = new JButton("Login");
         loginButton.setBounds(30, 210, 90, 30);
 
-        Label messageLabel = new Label("");
+        messageLabel = new JLabel("");
         messageLabel.setBounds(130, 210, 180, 30);
         messageLabel.setForeground(Color.RED);
 
-        ActionListener loginAction = (ActionEvent event) -> {
-            String username = usernameField.getText().trim();
-            String password = passwordField.getText().trim();
+        loginButton.addActionListener(e -> login());
 
-            if (username.isEmpty() || password.isEmpty()) {
-                messageLabel.setForeground(Color.RED);
-                messageLabel.setText("Both fields are required.");
-                return;
-            }
-
-            try {
-                boolean isValid = DBConnection.checkLogin(username, password);
-
-                if (isValid) {
-                    messageLabel.setForeground(new Color(0, 128, 0));
-                    messageLabel.setText("Login successful.");
-
-                    frame.dispose();
-                    EventQueue.invokeLater(() -> new ChatFrame(username));
-                } else {
-                    messageLabel.setForeground(Color.RED);
-                    messageLabel.setText("Invalid username or password.");
-                }
-            } catch (IllegalStateException | SQLException e) {
-                messageLabel.setForeground(Color.RED);
-                messageLabel.setText("Check database setup.");
-                e.printStackTrace();
-            }
-        };
-
-        loginButton.addActionListener(loginAction);
-        usernameField.addActionListener(loginAction);
-        passwordField.addActionListener(loginAction);
+        usernameField.addActionListener(e -> login());
+        passwordField.addActionListener(e -> login());
 
         frame.add(titleLabel);
         frame.add(userLabel);
@@ -91,25 +57,50 @@ public class LoginFrame {
         frame.add(loginButton);
         frame.add(messageLabel);
 
-        frame.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent event) {
-                frame.dispose();
-                System.exit(0);
-            }
-        });
-
         frame.setVisible(true);
     }
 
-    private void centerFrame(Frame frame) {
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        int x = (screenSize.width - frame.getWidth()) / 2;
-        int y = (screenSize.height - frame.getHeight()) / 2;
-        frame.setLocation(Math.max(x, 0), Math.max(y, 0));
+    private void login() {
+
+        String username = usernameField.getText().trim();
+        String password = new String(passwordField.getPassword()).trim();
+
+        if (username.isEmpty() || password.isEmpty()) {
+            messageLabel.setForeground(Color.RED);
+            messageLabel.setText("Both fields are required.");
+            return;
+        }
+
+        try {
+
+            boolean isValid = DBConnection.checkLogin(username, password);
+
+            if (isValid) {
+
+                messageLabel.setForeground(new Color(0, 128, 0));
+                messageLabel.setText("Login successful.");
+
+                frame.dispose();
+
+                SwingUtilities.invokeLater(() ->
+                        new ChatFrame(username));
+
+            } else {
+
+                messageLabel.setForeground(Color.RED);
+                messageLabel.setText("Invalid username or password.");
+            }
+
+        } catch (IllegalStateException | SQLException ex) {
+
+            messageLabel.setForeground(Color.RED);
+            messageLabel.setText("Check database setup.");
+            ex.printStackTrace();
+        }
     }
 
     public static void main(String[] args) {
-        new LoginFrame();
+
+        SwingUtilities.invokeLater(LoginFrame::new);
     }
 }

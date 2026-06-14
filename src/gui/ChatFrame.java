@@ -2,18 +2,7 @@ package gui;
 
 import config.AppConfig;
 import database.DBConnection;
-import java.awt.BorderLayout;
-import java.awt.Button;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.EventQueue;
-import java.awt.Font;
-import java.awt.Frame;
-import java.awt.Label;
-import java.awt.Panel;
-import java.awt.TextArea;
-import java.awt.TextField;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -31,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.swing.*;
 
 public class ChatFrame {
 
@@ -42,12 +32,13 @@ public class ChatFrame {
     private final String username;
     private final Map<String, StringBuffer> chats = new ConcurrentHashMap<>();
 
-    private Frame frame;
-    private TextArea textArea;
-    private java.awt.List userList;
-    private TextField messageField;
-    private Button sendButton;
-    private Label statusLabel;
+    private JFrame frame;
+    private JTextArea textArea;
+    private JList<String> userList;
+    private DefaultListModel<String> userListModel;
+    private JTextField messageField;
+    private JButton sendButton;
+    private JLabel statusLabel;
     private volatile boolean closing;
 
     private volatile String selectedUser;
@@ -69,19 +60,19 @@ public class ChatFrame {
         Font chatFont = new Font("Segoe UI", Font.PLAIN, 14);
         Font boldFont = new Font("Segoe UI", Font.BOLD, 14);
 
-        frame = new Frame("ChatApp - " + username);
+        frame = new JFrame("ChatApp - " + username);
         frame.setLayout(new BorderLayout(10, 10));
         frame.setBackground(BACKGROUND_COLOR);
         frame.setSize(760, 520);
-        centerFrame(frame);
+        frame.setLocationRelativeTo(null);
 
-        Panel topPanel = new Panel(new BorderLayout(10, 0));
+        JPanel topPanel = new JPanel(new BorderLayout(10, 0));
         topPanel.setBackground(BACKGROUND_COLOR);
 
-        Label welcomeLabel = new Label("Logged in as: " + username);
+        JLabel welcomeLabel = new JLabel("Logged in as: " + username);
         welcomeLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
 
-        Button refreshButton = new Button("Refresh");
+        JButton refreshButton = new JButton("Refresh");
         refreshButton.setFont(boldFont);
         refreshButton.addActionListener(event -> {
             if (!isConnected()) {
@@ -94,43 +85,49 @@ public class ChatFrame {
         topPanel.add(refreshButton, BorderLayout.EAST);
         frame.add(topPanel, BorderLayout.NORTH);
 
-        textArea = new TextArea();
+        textArea = new JTextArea();
         textArea.setEditable(false);
         textArea.setFont(chatFont);
         textArea.setBackground(CHAT_BACKGROUND);
 
-        userList = new java.awt.List();
+        userListModel = new DefaultListModel<>();
+
+        userList = new JList<>(userListModel);
         userList.setFont(chatFont);
-        userList.setBackground(CHAT_BACKGROUND);
-        userList.setPreferredSize(new Dimension(180, 400));
-        userList.addItemListener(event -> {
-            selectedUser = userList.getSelectedItem();
-            loadChatHistory();
-            updateSendState();
+        userList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        userList.addListSelectionListener(event -> {
+            if (!event.getValueIsAdjusting()) {
+                selectedUser = userList.getSelectedValue();
+                loadChatHistory();
+                updateSendState();
+            }
         });
 
-        Panel userPanel = new Panel(new BorderLayout(0, 6));
+        JPanel userPanel = new JPanel(new BorderLayout(0, 6));
         userPanel.setBackground(BACKGROUND_COLOR);
 
-        Label userLabel = new Label("Users");
+        JLabel userLabel = new JLabel("Users");
         userLabel.setFont(boldFont);
         userPanel.add(userLabel, BorderLayout.NORTH);
-        userPanel.add(userList, BorderLayout.CENTER);
+        JScrollPane userScrollPane = new JScrollPane(userList);
+        userScrollPane.setPreferredSize(new Dimension(140, 0));
 
-        Panel centerPanel = new Panel(new BorderLayout(10, 0));
+        userPanel.add(userScrollPane, BorderLayout.CENTER);
+
+        JPanel centerPanel = new JPanel(new BorderLayout(10, 0));
         centerPanel.setBackground(BACKGROUND_COLOR);
         centerPanel.add(userPanel, BorderLayout.WEST);
-        centerPanel.add(textArea, BorderLayout.CENTER);
+        centerPanel.add(new JScrollPane(textArea), BorderLayout.CENTER);
         frame.add(centerPanel, BorderLayout.CENTER);
 
-        statusLabel = new Label("Connect to the server and select a user to begin.");
+        statusLabel = new JLabel("Connect to the server and select a user to begin.");
         statusLabel.setFont(chatFont);
         statusLabel.setForeground(new Color(60, 60, 60));
 
-        messageField = new TextField();
+        messageField = new JTextField();
         messageField.setFont(chatFont);
 
-        sendButton = new Button("Send");
+        sendButton = new JButton("Send");
         sendButton.setFont(boldFont);
         sendButton.setBackground(ACCENT_COLOR);
         sendButton.setForeground(Color.WHITE);
@@ -139,11 +136,11 @@ public class ChatFrame {
         sendButton.addActionListener(sendAction);
         messageField.addActionListener(sendAction);
 
-        Panel inputPanel = new Panel(new BorderLayout(8, 0));
+        JPanel inputPanel = new JPanel(new BorderLayout(8, 0));
         inputPanel.add(messageField, BorderLayout.CENTER);
         inputPanel.add(sendButton, BorderLayout.EAST);
 
-        Panel bottomPanel = new Panel(new BorderLayout(0, 8));
+        JPanel bottomPanel = new JPanel(new BorderLayout(0, 8));
         bottomPanel.setBackground(BACKGROUND_COLOR);
         bottomPanel.add(statusLabel, BorderLayout.NORTH);
         bottomPanel.add(inputPanel, BorderLayout.SOUTH);
@@ -264,9 +261,10 @@ public class ChatFrame {
             return;
         }
 
-        userList.removeAll();
+        userListModel.clear();
+
         for (String user : users) {
-            userList.add(user);
+            userListModel.addElement(user);
         }
 
         if (users.isEmpty()) {
@@ -281,7 +279,7 @@ public class ChatFrame {
             selectedUser = users.get(0);
         }
 
-        userList.select(users.indexOf(selectedUser));
+        userList.setSelectedIndex(users.indexOf(selectedUser));
         loadChatHistory();
 
         if (isConnected()) {
@@ -433,12 +431,5 @@ public class ChatFrame {
         frame.setVisible(false);
         frame.dispose();
         System.exit(0);
-    }
-
-    private void centerFrame(Frame currentFrame) {
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        int x = (screenSize.width - currentFrame.getWidth()) / 2;
-        int y = (screenSize.height - currentFrame.getHeight()) / 2;
-        currentFrame.setLocation(Math.max(x, 0), Math.max(y, 0));
     }
 }
