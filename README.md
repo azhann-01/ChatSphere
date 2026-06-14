@@ -135,6 +135,19 @@ java -cp ".;lib/*" gui.LoginFrame
 
 ---
 
+## Demo Credentials
+
+After importing the database, you can log in using:
+
+| Username | Password |
+|----------|----------|
+| admin | admin123 |
+| alice | alice123 |
+| bob | bob123 |
+| charlie | charlie123 |
+
+----
+
 ## Concepts Demonstrated
 
 * Object-Oriented Programming
