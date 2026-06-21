@@ -1,8 +1,8 @@
-# ChatApp
+# ChatSphere
 
 A real-time desktop messaging application built using **Java, Swing, Socket Programming, Multithreading, JDBC, and MySQL**.
 
-ChatApp enables multiple users to communicate instantly through a client-server architecture while maintaining persistent chat history in a MySQL database.
+ChatSphere enables multiple users to communicate instantly through a client-server architecture while maintaining persistent chat history in a MySQL database.
 
 ---
 
@@ -97,8 +97,8 @@ Previously exchanged messages are automatically loaded from the database when a 
 ### Clone Repository
 
 ```bash
-git clone https://github.com/azhann-01/ChatApp.git
-cd ChatApp
+git clone https://github.com/azhann-01/ChatSphere.git
+cd ChatSphere
 ```
 
 ### Configure Database
@@ -106,7 +106,7 @@ cd ChatApp
 Create a MySQL database:
 
 ```sql
-CREATE DATABASE chatapp;
+CREATE DATABASE ChatSphere;
 ```
 
 Update database credentials inside:
